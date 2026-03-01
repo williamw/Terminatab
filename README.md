@@ -1,8 +1,8 @@
 # Terminal Companion
 
-A personal-use system tray app that manages a local terminal (PTY) and exposes it
-to Chrome via a browser extension. Split-view a terminal alongside documentation
-tabs without leaving Chrome.
+A local companion server that manages terminal sessions (PTY) and exposes them to
+Chrome via a browser extension. Split-view a terminal alongside documentation tabs
+without leaving Chrome.
 
 ## Prerequisites
 
@@ -30,6 +30,9 @@ zig build
 The first command fetches the WebSocket dependency and updates `build.zig.zon` with
 the correct hash. You only need to run it once. The server starts on
 `ws://localhost:7681`.
+
+The server runs as a foreground process — it logs to stdout and you stop it with
+Ctrl+C. Keep this terminal window open while using the extension.
 
 ### 3. Load the Chrome extension
 
