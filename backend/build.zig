@@ -23,6 +23,14 @@ pub fn build(b: *std.Build) void {
     if (exe.rootModuleTarget().os.tag == .linux) {
         exe.linkSystemLibrary("util");
     }
+    // macOS menu bar app (NSApplication + NSStatusItem)
+    if (exe.rootModuleTarget().os.tag == .macos) {
+        exe.addCSourceFile(.{
+            .file = b.path("src/macos_app.m"),
+            .flags = &.{"-fobjc-arc"},
+        });
+        exe.linkFramework("Cocoa");
+    }
     b.installArtifact(exe);
 
     // Run step

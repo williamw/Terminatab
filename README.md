@@ -1,9 +1,7 @@
 # Terminatab
 
-A Chrome extension that embeds a live terminal
-alongside your browser tabs. Powered by a
-lightweight local Zig server that manages PTY
-sessions over WebSocket.
+A Chrome extension that puts a terminal in your browser. Powered by a
+lightweight local Zig server that manages PTY sessions over WebSocket.
 
 ## Prerequisites
 
@@ -29,8 +27,12 @@ zig build
 
 The server starts on `ws://localhost:7681`.
 
-The server runs as a foreground process — it logs to stdout and you stop it with
-Ctrl+C. Keep this terminal window open while using the extension.
+On macOS, the server runs as a menu bar app — look for the **>_** icon in the
+menu bar. It daemonizes automatically (the shell returns immediately). Click the
+icon and choose **Quit Terminatab** to stop it.
+
+On Linux, the server runs as a foreground process — it logs to stdout and you
+stop it with Ctrl+C.
 
 ### 3. Load the Chrome extension
 
@@ -41,10 +43,10 @@ Ctrl+C. Keep this terminal window open while using the extension.
 
 ### 4. Use it
 
-- **Side panel mode**: Click the Terminatab icon on any regular web page.
+- **Side panel**: Click the Terminatab icon on any `http://` or `https://` page.
   The terminal opens in Chrome's side panel alongside your current tab.
-- **Full tab mode**: Click the icon on a new tab page, or bookmark
-  `chrome-extension://<YOUR_EXTENSION_ID>/terminal.html` for quick access.
+- **Full tab**: Click the icon on any other page (new tab, `chrome://` pages,
+  etc.) to open a terminal in a new tab.
 - **Pop out**: Click the pop-out button in the side panel to move the terminal
   to its own full tab.
 
@@ -69,14 +71,16 @@ Open `extension/test.html` in Chrome after loading the extension.
 ┌─────────────────────┐       WebSocket        ┌──────────────────────┐
 │   Chrome Extension   │ ◄──────────────────► │   Zig Backend         │
 │  • xterm.js UI       │    localhost:7681     │  • PTY management     │
-│  • Side Panel mode   │                       │  • WebSocket server   │
-│  • Full tab mode     │                       │  • Shell spawning     │
+│  • Side panel        │                       │  • WebSocket server   │
+│  • Full tab          │                       │  • Shell spawning     │
+│                      │                       │  • Menu bar app (mac) │
 └─────────────────────┘                        └──────────────────────┘
 ```
 
 The Zig backend spawns PTY sessions and serves them over WebSocket. The Chrome
 extension renders the terminal using xterm.js and connects to the backend. Each
-tab or panel gets its own independent shell session.
+tab or panel gets its own independent shell session. On macOS, the backend runs
+as a menu bar app with no dock icon.
 
 ## License
 

@@ -1,8 +1,11 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const websocket = @import("websocket");
 const protocol = @import("protocol.zig");
 const session_mod = @import("session.zig");
 const ws_handler = @import("ws_handler.zig");
+
+extern fn macos_app_main() void;
 
 const PORT: u16 = 7681;
 const ADDRESS = "127.0.0.1";
@@ -72,6 +75,20 @@ const WsHandler = struct {
 };
 
 pub fn main() !void {
+    if (builtin.os.tag == .macos) {
+        macos_app_main();
+    } else {
+        try serverMain();
+    }
+}
+
+export fn terminatab_server_start() void {
+    serverMain() catch |err| {
+        std.log.err("Server failed: {}", .{err});
+    };
+}
+
+fn serverMain() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
