@@ -213,6 +213,13 @@ class TerminalManager {
     }
   }
 
+  popOut() {
+    const url = this.sessionId
+      ? chrome.runtime.getURL(`terminal.html?session=${this.sessionId}`)
+      : chrome.runtime.getURL('terminal.html');
+    chrome.tabs.create({ url });
+  }
+
   destroy() {
     if (this._resizeObserver) {
       this._resizeObserver.disconnect();

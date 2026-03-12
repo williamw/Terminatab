@@ -3,7 +3,7 @@
   "name": "Terminatab",
   "version": "0.1.0",
   "description": "Terminal in a tab via local WebSocket",
-  "permissions": [],
+  "permissions": ["sidePanel", "tabs"],
   "icons": {
     "16": "images/icon-16.png",
     "32": "images/icon-32.png",
@@ -21,5 +21,8 @@
   },
   "background": {
     "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
   }
 }
