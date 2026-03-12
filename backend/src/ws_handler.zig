@@ -103,7 +103,6 @@ pub fn Handler(comptime Conn: type) type {
         }
 
         fn handleInput(self: *Self, session_id: []const u8, data: []const u8) !void {
-            _ = self;
             // Look up the session directly from the manager to get a mutable reference
             // We need to bypass the lock since getSession returns a pointer
             // This is safe because we only write to the PTY fd
@@ -115,7 +114,6 @@ pub fn Handler(comptime Conn: type) type {
         }
 
         fn handleResize(self: *Self, session_id: []const u8, cols: u16, rows: u16) !void {
-            _ = self;
             const mgr = self.session_manager;
             if (mgr.getSession(session_id)) |session| {
                 try session.pty.resize(cols, rows);

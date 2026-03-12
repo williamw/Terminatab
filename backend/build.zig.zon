@@ -1,13 +1,14 @@
 .{
-    .name = .@"terminatab-server",
+    .fingerprint = 0xc9af004f789656a5,
+    .name = .terminatab_server,
     .version = "0.1.0",
     .minimum_zig_version = "0.14.0",
     .dependencies = .{
         // Use: zig fetch --save "git+https://github.com/karlseguin/websocket.zig#zig-0.14"
         // to automatically populate the correct hash.
         .websocket = .{
-            .url = "git+https://github.com/karlseguin/websocket.zig#zig-0.14",
-            .hash = "12200000000000000000000000000000000000000000000000000000000000000000",
+            .url = "git+https://github.com/karlseguin/websocket.zig?ref=zig-0.14#5648a491ae2bc6190325787cd7b83b6d535d0ec6",
+            .hash = "websocket-0.1.0-ZPISdTR0AwCUkkMRFRkYDdJyi2YZXolRGD37PGH6fzqM",
         },
     },
     .paths = .{

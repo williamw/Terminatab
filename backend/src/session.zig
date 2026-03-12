@@ -43,7 +43,7 @@ pub const SessionManager = struct {
         defer self.mutex.unlock();
 
         // Spawn the PTY
-        var pty_inst = try Pty.spawn(null, cols, rows);
+        const pty_inst = try Pty.spawn(null, cols, rows);
 
         // Generate random session ID (8 random bytes → 16 hex chars)
         var random_bytes: [8]u8 = undefined;

@@ -3,7 +3,11 @@ const builtin = @import("builtin");
 const posix = std.posix;
 
 const c = @cImport({
-    @cInclude("pty.h");
+    if (builtin.os.tag == .macos) {
+        @cInclude("util.h");
+    } else {
+        @cInclude("pty.h");
+    }
     @cInclude("unistd.h");
     @cInclude("signal.h");
     @cInclude("sys/ioctl.h");
