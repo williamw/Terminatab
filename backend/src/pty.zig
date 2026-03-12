@@ -90,6 +90,11 @@ pub const Pty = struct {
 
             const envp: [*:null]const ?[*:0]const u8 = @ptrCast(&env_buf);
 
+            // Default to user's home directory (menu bar app starts in /)
+            if (std.c.getenv("HOME")) |home| {
+                _ = std.c.chdir(home);
+            }
+
             _ = std.c.execve(shell_z, &argv, envp);
             // If execve returns, it failed
             std.c._exit(127);
