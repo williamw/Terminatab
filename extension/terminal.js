@@ -75,10 +75,11 @@ class TerminalManager {
     // Mount terminal
     this.term.open(this.container);
 
-    // Wait for fonts + layout before initial fit
+    // Wait for fonts + layout before initial fit and focus
     document.fonts.ready.then(() => {
       requestAnimationFrame(() => {
         this.fitAddon.fit();
+        this.term.focus();
       });
     });
 
