@@ -74,8 +74,12 @@ class TerminalManager {
 
     // Mount terminal
     this.term.open(this.container);
-    requestAnimationFrame(() => {
-      this.fitAddon.fit();
+
+    // Wait for fonts + layout before initial fit
+    document.fonts.ready.then(() => {
+      requestAnimationFrame(() => {
+        this.fitAddon.fit();
+      });
     });
 
     // Handle terminal input → send to server
@@ -141,6 +145,13 @@ class TerminalManager {
       switch (msg.type) {
         case 'session_created':
           this.sessionId = msg.session_id;
+          // Send current terminal dimensions — the initial fit() likely fired
+          // before sessionId was set, so the resize message was dropped.
+          this.ws.send(buildMessage('resize', {
+            session_id: this.sessionId,
+            cols: this.term.cols,
+            rows: this.term.rows,
+          }));
           break;
 
         case 'output':
