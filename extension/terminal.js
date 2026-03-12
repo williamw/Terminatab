@@ -1,5 +1,4 @@
-// Terminatab — Shared Terminal + WebSocket Logic
-// Used by both sidepanel.html and terminal.html.
+// Terminatab — Terminal + WebSocket Logic
 
 const WS_URL = 'ws://127.0.0.1:7681';
 
@@ -11,17 +10,6 @@ function buildMessage(type, fields) {
 
 function parseServerMessage(json) {
   return JSON.parse(json);
-}
-
-// ── New Tab Detection ────────────────────────────────────────────────
-
-const NEW_TAB_PATTERNS = [
-  'chrome://newtab',
-  'chrome://new-tab-page',
-];
-
-function isNewTabUrl(url) {
-  return NEW_TAB_PATTERNS.some(pattern => url.startsWith(pattern));
 }
 
 // ── Reconnect Backoff ────────────────────────────────────────────────
@@ -54,7 +42,6 @@ class TerminalManager {
     this.container = containerEl;
     this.statusEl = statusEl;
     this.sessionId = options.sessionId || null;
-    this.mode = options.mode || 'sidepanel';
     this.ws = null;
     this.term = null;
     this.fitAddon = null;
@@ -87,7 +74,9 @@ class TerminalManager {
 
     // Mount terminal
     this.term.open(this.container);
-    this.fitAddon.fit();
+    requestAnimationFrame(() => {
+      this.fitAddon.fit();
+    });
 
     // Handle terminal input → send to server
     this.term.onData((data) => {
@@ -209,15 +198,6 @@ class TerminalManager {
   hideStatus() {
     if (this.statusEl) {
       this.statusEl.classList.remove('visible');
-    }
-  }
-
-  popOut() {
-    if (this.sessionId && typeof chrome !== 'undefined' && chrome.runtime) {
-      const url = chrome.runtime.getURL('terminal.html?session=' + this.sessionId);
-      chrome.tabs.create({ url: url });
-      // Keep session alive server-side, just disconnect this panel
-      if (this.ws) this.ws.close();
     }
   }
 

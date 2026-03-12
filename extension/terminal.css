@@ -1,4 +1,4 @@
-/* Terminatab — Shared Styles */
+/* Terminatab — Styles */
 
 * {
   margin: 0;
@@ -14,59 +14,11 @@ html, body {
   overflow: hidden;
 }
 
-/* ── Side Panel Layout ────────────────────────────────────── */
-
-.panel-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 10px;
-  background: #252526;
-  border-bottom: 1px solid #3c3c3c;
-  flex-shrink: 0;
-}
-
-.panel-header .title {
-  font-size: 12px;
-  font-weight: 600;
-  color: #cccccc;
-}
-
-.panel-header .actions {
-  display: flex;
-  gap: 6px;
-}
-
-.panel-header button {
-  background: #3c3c3c;
-  color: #cccccc;
-  border: none;
-  border-radius: 3px;
-  padding: 3px 8px;
-  font-size: 11px;
-  cursor: pointer;
-}
-
-.panel-header button:hover {
-  background: #505050;
-}
-
 /* ── Terminal Container ───────────────────────────────────── */
 
 #terminal-container {
-  flex: 1;
-  overflow: hidden;
-}
-
-/* Full-tab mode: no header, terminal fills viewport */
-.full-tab #terminal-container {
   height: 100vh;
+  overflow: hidden;
 }
 
 /* ── Connection Status Overlay ────────────────────────────── */
@@ -104,5 +56,5 @@ html, body {
 
 .xterm {
   height: 100%;
-  padding: 4px;
+  padding: 16px;
 }
