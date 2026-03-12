@@ -65,7 +65,30 @@ pub const Pty = struct {
             const shell_z: [*:0]const u8 = @ptrCast(&shell_path_z);
 
             const argv = [_:null]?[*:0]const u8{ login_name_z, null };
-            const envp: [*:null]const ?[*:0]const u8 = @ptrCast(std.c.environ);
+
+            // Build modified environment with TERM and COLORTERM set
+            // so the shell emits 256-color/truecolor escape sequences.
+            var env_buf: [1024]?[*:0]const u8 = undefined;
+            var env_len: usize = 0;
+
+            const raw_environ: [*]?[*:0]const u8 = @ptrCast(std.c.environ);
+            var ei: usize = 0;
+            while (raw_environ[ei]) |entry| : (ei += 1) {
+                const ptr: [*]const u8 = @ptrCast(entry);
+                const skip = (ptr[0] == 'T' and ptr[1] == 'E' and ptr[2] == 'R' and ptr[3] == 'M' and ptr[4] == '=') or
+                    (ptr[0] == 'C' and ptr[1] == 'O' and ptr[2] == 'L' and ptr[3] == 'O' and ptr[4] == 'R' and ptr[5] == 'T' and ptr[6] == 'E' and ptr[7] == 'R' and ptr[8] == 'M' and ptr[9] == '=');
+                if (!skip) {
+                    env_buf[env_len] = entry;
+                    env_len += 1;
+                }
+            }
+            env_buf[env_len] = "TERM=xterm-256color";
+            env_len += 1;
+            env_buf[env_len] = "COLORTERM=truecolor";
+            env_len += 1;
+            env_buf[env_len] = null;
+
+            const envp: [*:null]const ?[*:0]const u8 = @ptrCast(&env_buf);
 
             _ = std.c.execve(shell_z, &argv, envp);
             // If execve returns, it failed
