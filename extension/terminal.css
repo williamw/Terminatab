@@ -106,3 +106,18 @@ body:not(:has(.panel-container)) #terminal-container {
   height: 100%;
   padding: 16px;
 }
+
+/* ── Scrollbar ──────────────────────────────────────────── */
+
+.xterm .xterm-viewport::-webkit-scrollbar {
+  width: 10px;
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar-thumb {
+  background: #444444;
+  border-radius: 0;
+}
