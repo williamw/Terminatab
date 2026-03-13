@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
   <rect width="128" height="128" rx="16" fill="#1e1e1e"/>
-  <!-- Chevron > as a filled polygon -->
-  <polygon points="28,32 56,64 28,96 40,96 68,64 40,32" fill="#d4d4d4"/>
-  <!-- Underscore as a filled rect -->
-  <rect x="60" y="82" width="40" height="10" rx="2" fill="#d4d4d4"/>
+  <!-- ❯ U+276F — heavier chevron -->
+  <path d="M32,28 L64,64 L32,100 L44,100 L76,64 L44,28 Z" fill="#d4d4d4"/>
+  <!-- ⎽ U+23BD — short, thin scan line at baseline -->
+  <rect x="64" y="90" width="28" height="5" fill="#d4d4d4"/>
 </svg>
