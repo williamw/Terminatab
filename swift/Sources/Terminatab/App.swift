@@ -47,7 +47,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .font: NSFont.systemFont(ofSize: 13, weight: .semibold),
             .foregroundColor: NSColor.black,
         ]
-        let text = "\u{276F}\u{2581}" as NSString
+        let text = "\u{276F}\u{23BD}" as NSString
         let textSize = text.size(withAttributes: attrs)
         let point = NSPoint(
             x: (size.width - textSize.width) / 2,
