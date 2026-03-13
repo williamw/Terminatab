@@ -5,6 +5,10 @@ import Foundation
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
     var server: WebSocketServer?
+    var mcpServer: MCPServer?
+    var mcpMenuItem: NSMenuItem!
+    var mcpCopyMenuItem: NSMenuItem!
+    var mcpEnabled = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Create menu bar status item
@@ -19,6 +23,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             keyEquivalent: ""
         )
         titleItem.isEnabled = false
+        menu.addItem(.separator())
+
+        mcpMenuItem = menu.addItem(
+            withTitle: "Enable DevTools MCP",
+            action: #selector(toggleMCP(_:)),
+            keyEquivalent: ""
+        )
+        mcpMenuItem.target = self
+
+        mcpCopyMenuItem = menu.addItem(
+            withTitle: "Copy MCP Config",
+            action: #selector(copyMCPConfig(_:)),
+            keyEquivalent: ""
+        )
+        mcpCopyMenuItem.target = self
+
         menu.addItem(.separator())
         menu.addItem(
             withTitle: "Quit Terminatab",
@@ -36,6 +56,54 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } catch {
             NSLog("Failed to start server: %@", error.localizedDescription)
         }
+
+        // Start MCP HTTP server
+        if let server {
+            do {
+                mcpServer = try MCPServer(port: 7682, webSocketServer: server)
+                mcpServer?.start()
+            } catch {
+                NSLog("Failed to start MCP server: %@", error.localizedDescription)
+            }
+
+            // Listen for MCP state changes from the extension
+            server.onMCPStateChange { [weak self] enabled, tabCount in
+                Task { @MainActor in
+                    self?.mcpEnabled = enabled
+                    if enabled {
+                        self?.mcpMenuItem.title = "Disable DevTools MCP (\(tabCount) tabs)"
+                    } else {
+                        self?.mcpMenuItem.title = "Enable DevTools MCP"
+                    }
+                }
+            }
+        }
+    }
+
+    @objc func toggleMCP(_ sender: Any?) {
+        guard let server else { return }
+
+        if mcpEnabled {
+            server.sendMCPDisable()
+        } else {
+            if !server.hasMCPControlConnection {
+                // No extension connected — show alert
+                let alert = NSAlert()
+                alert.messageText = "Chrome Extension Not Connected"
+                alert.informativeText = "The Terminatab Chrome extension is not connected. Make sure it's installed and enabled in Chrome."
+                alert.alertStyle = .warning
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+                return
+            }
+            server.sendMCPEnable()
+        }
+    }
+
+    @objc func copyMCPConfig(_ sender: Any?) {
+        let config = #"{"mcpServers":{"terminatab":{"url":"http://127.0.0.1:7682/mcp"}}}"#
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(config, forType: .string)
     }
 
     private func createMenuBarIcon() -> NSImage {

@@ -1,12 +1,19 @@
 import Foundation
 import Network
 
+enum ConnectionType {
+    case terminal
+    case mcpControl
+}
+
 final class WebSocketConnection: @unchecked Sendable {
     let connection: NWConnection
     let sessionManager: SessionManager
     var currentSessionId: String?
     var readTask: Task<Void, Never>?
     var onClose: (() -> Void)?
+    var connectionType: ConnectionType = .terminal
+    weak var server: WebSocketServer?
 
     init(connection: NWConnection, sessionManager: SessionManager) {
         self.connection = connection
@@ -58,11 +65,24 @@ final class WebSocketConnection: @unchecked Sendable {
         do {
             msg = try parseClientMessage(json)
         } catch {
-            sendMessage(.error(message: "Invalid message"))
+            if connectionType == .terminal {
+                sendMessage(.error(message: "Invalid message"))
+            }
             return
         }
 
         switch msg {
+        case .mcpControl:
+            connectionType = .mcpControl
+            server?.setMCPControlConnection(self)
+        case .mcpEnabled(let tabCount):
+            server?.handleMCPEnabled(tabCount: tabCount)
+        case .mcpDisabled:
+            server?.handleMCPDisabled()
+        case .mcpResponse(let id, let result):
+            server?.handleMCPResponse(id: id, rawJSON: result)
+        case .ping:
+            break // keepalive, no response needed
         case .newSession:
             handleNewSession()
         case .attach(let sessionId):
@@ -130,6 +150,9 @@ final class WebSocketConnection: @unchecked Sendable {
     private func handleDisconnect() {
         readTask?.cancel()
         readTask = nil
+        if connectionType == .mcpControl {
+            server?.clearMCPControlConnection(self)
+        }
         if let sid = currentSessionId {
             Task { await sessionManager.markDisconnected(sid) }
         }
@@ -148,6 +171,28 @@ final class WebSocketConnection: @unchecked Sendable {
 
     func sendMessage(_ msg: ServerMessage) {
         let json = serializeServerMessage(msg)
+        guard let data = json.data(using: .utf8) else { return }
+
+        let metadata = NWProtocolWebSocket.Metadata(opcode: .text)
+        let context = NWConnection.ContentContext(
+            identifier: "text",
+            metadata: [metadata]
+        )
+
+        connection.send(
+            content: data,
+            contentContext: context,
+            isComplete: true,
+            completion: .contentProcessed { error in
+                if let error {
+                    NSLog("WebSocket send error: %@", error.localizedDescription)
+                }
+            }
+        )
+    }
+
+    func sendMCPMessage(_ msg: MCPServerMessage) {
+        let json = serializeMCPServerMessage(msg)
         guard let data = json.data(using: .utf8) else { return }
 
         let metadata = NWProtocolWebSocket.Metadata(opcode: .text)

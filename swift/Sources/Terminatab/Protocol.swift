@@ -7,6 +7,12 @@ enum ClientMessage {
     case attach(sessionId: String)
     case input(sessionId: String, data: String)
     case resize(sessionId: String, cols: UInt16, rows: UInt16)
+    // MCP control messages from extension
+    case mcpControl
+    case mcpEnabled(tabCount: Int)
+    case mcpDisabled
+    case mcpResponse(id: String, result: String) // raw JSON
+    case ping
 }
 
 // MARK: - Server → Client Messages
@@ -33,6 +39,25 @@ private struct RawMessage: Decodable {
     let cols: UInt16?
     let rows: UInt16?
     let message: String?
+    // MCP fields
+    let tab_count: Int?
+    let id: String?
+    let result: AnyCodable?
+    let error: String?
+}
+
+/// Type-erased Codable wrapper for passing through raw JSON values.
+struct AnyCodable: Decodable, Sendable {
+    let rawJSON: String
+
+    init(from decoder: Decoder) throws {
+        // We don't use this path — we extract raw JSON manually
+        rawJSON = "{}"
+    }
+
+    init(rawJSON: String) {
+        self.rawJSON = rawJSON
+    }
 }
 
 func parseClientMessage(_ json: String) throws -> ClientMessage {
@@ -63,6 +88,19 @@ func parseClientMessage(_ json: String) throws -> ClientMessage {
             throw ProtocolError.missingField
         }
         return .resize(sessionId: sessionId, cols: cols, rows: rows)
+    case "mcp_control":
+        return .mcpControl
+    case "mcp_enabled":
+        return .mcpEnabled(tabCount: raw.tab_count ?? 0)
+    case "mcp_disabled":
+        return .mcpDisabled
+    case "mcp_response":
+        guard let id = raw.id else { throw ProtocolError.missingField }
+        // Extract the raw JSON for result/error — re-serialize from original data
+        let rawJSON = extractMCPResponsePayload(from: data)
+        return .mcpResponse(id: id, result: rawJSON)
+    case "ping":
+        return .ping
     default:
         throw ProtocolError.unknownMessageType
     }
@@ -138,6 +176,44 @@ func serializeOutputData(sessionId: String, data: Data) -> Data {
     buf.append(contentsOf: jsonEscapeBytes(data))
     buf.append(contentsOf: "}".utf8)
     return Data(buf)
+}
+
+/// Extract the result/error payload from an mcp_response message as raw JSON string.
+/// This avoids deeply parsing the result — we just pass it through.
+private func extractMCPResponsePayload(from data: Data) -> String {
+    // Re-parse as dictionary to extract result/error fields
+    guard let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+        return "{}"
+    }
+    if let error = obj["error"] as? String {
+        return "{\"error\":\(jsonString(error))}"
+    }
+    if let result = obj["result"] {
+        guard let resultData = try? JSONSerialization.data(withJSONObject: result) else {
+            return "{}"
+        }
+        return String(data: resultData, encoding: .utf8) ?? "{}"
+    }
+    return "{}"
+}
+
+// MARK: - MCP Messages (Server → Extension)
+
+enum MCPServerMessage: Sendable {
+    case mcpEnable
+    case mcpDisable
+    case mcpRequest(id: String, tool: String, params: String) // params is raw JSON
+}
+
+func serializeMCPServerMessage(_ msg: MCPServerMessage) -> String {
+    switch msg {
+    case .mcpEnable:
+        return #"{"type":"mcp_enable"}"#
+    case .mcpDisable:
+        return #"{"type":"mcp_disable"}"#
+    case .mcpRequest(let id, let tool, let params):
+        return "{\"type\":\"mcp_request\",\"id\":\(jsonString(id)),\"tool\":\(jsonString(tool)),\"params\":\(params)}"
+    }
 }
 
 /// Returns the number of trailing bytes that form an incomplete UTF-8 sequence.
