@@ -7,5 +7,6 @@ const sessionId = params.get('session') || null;
 
 const manager = new TerminalManager(container, status, {
   sessionId: sessionId,
+  onTitleChange: (title) => { document.title = title; },
 });
 manager.init();

@@ -1,7 +1,12 @@
 const container = document.getElementById('terminal-container');
 const status = document.getElementById('connection-status');
 
-const manager = new TerminalManager(container, status, { mode: 'sidepanel' });
+const titleEl = document.querySelector('.panel-header .title');
+
+const manager = new TerminalManager(container, status, {
+  mode: 'sidepanel',
+  onTitleChange: (title) => { titleEl.textContent = title; },
+});
 manager.init();
 
 document.getElementById('btn-popout').addEventListener('click', () => {
@@ -10,6 +15,10 @@ document.getElementById('btn-popout').addEventListener('click', () => {
 
 document.getElementById('btn-new').addEventListener('click', () => {
   manager.destroy();
-  const newManager = new TerminalManager(container, status, { mode: 'sidepanel' });
+  titleEl.textContent = 'Terminatab';
+  const newManager = new TerminalManager(container, status, {
+    mode: 'sidepanel',
+    onTitleChange: (title) => { titleEl.textContent = title; },
+  });
   newManager.init();
 });

@@ -48,6 +48,7 @@ class TerminalManager {
     this.backoff = new ReconnectBackoff();
     this._resizeObserver = null;
     this._reconnecting = false;
+    this._onTitleChange = options.onTitleChange || null;
   }
 
   init() {
@@ -81,6 +82,11 @@ class TerminalManager {
         this.fitAddon.fit();
         this.term.focus();
       });
+    });
+
+    // Track terminal title changes (OSC 0/1/2 sequences from shell)
+    this.term.onTitleChange((title) => {
+      if (this._onTitleChange) this._onTitleChange(title);
     });
 
     // Handle terminal input → send to server
