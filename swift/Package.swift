@@ -6,9 +6,15 @@ let package = Package(
     platforms: [.macOS(.v15)],
     dependencies: [
         .package(url: "https://github.com/swiftlang/swift-testing.git", branch: "release/6.2"),
+        .package(url: "https://github.com/migueldeicaza/SwiftTerm.git", from: "1.13.0"),
     ],
     targets: [
-        .executableTarget(name: "Terminatab"),
+        .executableTarget(
+            name: "Terminatab",
+            dependencies: [
+                .product(name: "SwiftTerm", package: "SwiftTerm"),
+            ]
+        ),
         .testTarget(
             name: "TerminatabTests",
             dependencies: [
