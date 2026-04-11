@@ -100,12 +100,6 @@ test('parseServerMessage parses session_created', () => {
   assertEqual(msg.session_id, 'abc123');
 });
 
-test('parseServerMessage parses output', () => {
-  const msg = parseServerMessage('{"type":"output","session_id":"abc123","data":"hello\\n"}');
-  assertEqual(msg.type, 'output');
-  assertEqual(msg.data, 'hello\n');
-});
-
 test('parseServerMessage parses error', () => {
   const msg = parseServerMessage('{"type":"error","message":"not found"}');
   assertEqual(msg.type, 'error');

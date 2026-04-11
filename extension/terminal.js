@@ -127,6 +127,9 @@ class TerminalManager {
 
     try {
       this.ws = new WebSocket(WS_URL);
+      // PTY output arrives as binary frames; request ArrayBuffer for
+      // synchronous Uint8Array access in onmessage.
+      this.ws.binaryType = 'arraybuffer';
     } catch (e) {
       this.showStatus('Start the Terminatab server', 'Could not connect to ' + WS_URL);
       this.scheduleReconnect();
@@ -147,6 +150,12 @@ class TerminalManager {
     };
 
     this.ws.onmessage = (event) => {
+      // Binary frame → raw PTY output, write straight to the terminal.
+      if (event.data instanceof ArrayBuffer) {
+        this.term.write(new Uint8Array(event.data));
+        return;
+      }
+
       const msg = parseServerMessage(event.data);
 
       switch (msg.type) {
@@ -159,10 +168,6 @@ class TerminalManager {
             cols: this.term.cols,
             rows: this.term.rows,
           }));
-          break;
-
-        case 'output':
-          this.term.write(msg.data);
           break;
 
         case 'session_ended':
