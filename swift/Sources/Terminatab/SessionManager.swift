@@ -2,7 +2,7 @@ import Foundation
 
 struct Session: Sendable {
     let id: String
-    let pty: PTY
+    let pty: TerminalProcess
     var connected: Bool
     var lastActivity: Date
 }
@@ -12,7 +12,7 @@ actor SessionManager {
 
     /// Create a new session with a PTY. Returns the session ID.
     func createSession(cols: UInt16, rows: UInt16) throws -> String {
-        let pty = try PTY.spawn(cols: cols, rows: rows)
+        let pty = try TerminalProcess.spawn(cols: cols, rows: rows)
 
         // Generate random session ID (8 random bytes → 16 hex chars)
         var randomBytes = [UInt8](repeating: 0, count: 8)
