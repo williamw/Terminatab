@@ -124,23 +124,9 @@ final class WebSocketConnection: @unchecked Sendable {
         readTask?.cancel()
         readTask = Task {
             guard let stream = await sessionManager.outputStream(for: sessionId) else { return }
-            var utf8Remainder = Data()
             for await chunk in stream {
                 if Task.isCancelled { break }
-                var data = utf8Remainder + chunk
-                utf8Remainder = Data()
-                let tail = incompleteUTF8Tail(data)
-                if tail > 0 {
-                    utf8Remainder = data.suffix(tail)
-                    data = data.prefix(data.count - tail)
-                }
-                if !data.isEmpty {
-                    sendRawJSON(serializeOutputData(sessionId: sessionId, data: data))
-                }
-            }
-            // Flush any remaining bytes
-            if !utf8Remainder.isEmpty {
-                sendRawJSON(serializeOutputData(sessionId: sessionId, data: utf8Remainder))
+                sendBinary(chunk)
             }
             // PTY closed — notify client
             sendMessage(.sessionEnded(sessionId: sessionId))
@@ -159,10 +145,11 @@ final class WebSocketConnection: @unchecked Sendable {
         onClose?()
     }
 
-    /// Send pre-built JSON Data directly, bypassing String conversion.
-    private func sendRawJSON(_ data: Data) {
-        let metadata = NWProtocolWebSocket.Metadata(opcode: .text)
-        let context = NWConnection.ContentContext(identifier: "text", metadata: [metadata])
+    /// Send raw bytes as a binary WebSocket frame. Used for PTY output so the
+    /// payload is delivered as-is with no UTF-8 validation or JSON escaping.
+    private func sendBinary(_ data: Data) {
+        let metadata = NWProtocolWebSocket.Metadata(opcode: .binary)
+        let context = NWConnection.ContentContext(identifier: "binary", metadata: [metadata])
         connection.send(content: data, contentContext: context, isComplete: true,
                         completion: .contentProcessed { error in
             if let error { NSLog("WebSocket send error: %@", error.localizedDescription) }
